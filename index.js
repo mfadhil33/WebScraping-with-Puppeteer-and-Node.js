@@ -1,5 +1,6 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs/promises');
+const cron = require('node-cron');
 
 async function start() { 
 
@@ -13,12 +14,24 @@ async function start() {
     });
     await fs.writeFile("names.txt", names.join("\r\n"));
 
-    await page.click('#clickname');
-    const clickedData = await page.$eval("#data", el => );
+    await page.click('#clickme');
+    
+    const clickedData = await page.$eval("#data", el => el.textContent);
+    console.log(clickedData);
+
+
      const photos = await page.$$eval("img", (imgs) => {
         return imgs.map(x => x.src)
     });
 
+    await page.type("#ourfield", "blue");
+
+    await Promise.all([page.click("#ourform button"), page.waitForNavigation()]);
+
+
+    const info = await page.$eval("#message", el => el.textContent);
+
+    console.log(info);
     for (const photo of photos){
       const imagepage = await page.goto(photo);
       await fs.writeFile(photo.split("/").pop(), await imagepage.buffer());
@@ -28,4 +41,6 @@ async function start() {
 
 }
 
-start();
+cron.schedule("*/5 * * * * *" , start);
+// start();
+// setInterval(start, 5000);
